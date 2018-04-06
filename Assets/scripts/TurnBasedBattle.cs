@@ -8,7 +8,7 @@ public class TurnBasedBattle : MonoBehaviour {
 
     enum BattleState
     {
-        START,
+        IDLE,
         FIGHT,
         ITEMS,
         WEAPONS,
@@ -28,30 +28,41 @@ public class TurnBasedBattle : MonoBehaviour {
     private Moves HPUNCH; //heavy punch
     private Moves LKICK; //light kick
     private Moves HKICK; //heavy kick
-    public Button[] PlayerButtons;
+    public Button[] ChoicesButtons;
+
+    private void Awake()
+    {
+        InitializeMoves();
+        DisableMoveButtons();
+        DisableChoicesButtons();
+    }
 
     // Use this for initialization
     void Start () {
         PlayerStats = new Stats(100, false);
         EnemyStats = new Stats(50, false);
-        currentState = BattleState.START;
-        DisableMoveButtons();
-        InitializeMoves();
+        currentState = BattleState.IDLE;
         PlayerTurn = true;
-        EnablePlayerButtons();
     }
 
-    void DisablePlayerButtons()
+    private void Update()
     {
-        foreach (Button b in PlayerButtons)
+        if ((PlayerStats.IsDead == false) && (EnemyStats.IsDead == false) && (currentState != BattleState.RUN))
+            TurnChecker();
+    }
+
+    void DisableChoicesButtons()
+    {
+        foreach (Button b in ChoicesButtons)
         {
             b.interactable = false;
         }
+
     }
 
-    void EnablePlayerButtons()
+    void EnableChoicesButtons()
     {
-        foreach (Button b in PlayerButtons)
+        foreach (Button b in ChoicesButtons)
         {
             b.interactable = true;
         }
@@ -69,46 +80,51 @@ public class TurnBasedBattle : MonoBehaviour {
     {
         if (PlayerTurn == true)
         {
-            EnablePlayerButtons();
-            while ((PlayerStats.IsDead == false) && (currentState != BattleState.RUN))
+            EnableChoicesButtons();
+            if (currentState == BattleState.ITEMS)
             {
-                if (currentState == BattleState.ITEMS)
+                //Open Item inventory
+                Debug.Log("Items not yet implemented");
+            }
+            else if (currentState == BattleState.WEAPONS)
+            {
+                //Check Available Weapons
+                Debug.Log("Weapons not yet implemented");
+            }
+            else if (currentState == BattleState.FIGHT)                     //WORK ON THIS NEXT
+            {
+                //Change Enemy Stats
+                if (currentMove != null)
                 {
-                    //Open Item inventory
-                }
-                else if (currentState == BattleState.WEAPONS)
-                {
-                    //Check Available Weapons
-                }
-                else if (currentState == BattleState.FIGHT)
-                {
-                    //Change Enemy Stats
-                }
-                else if (currentState == BattleState.RUN)
-                {
-                    //Message + Audio
-                    SceneManager.LoadScene("MainScene");
-                    break;
+                    EnemyStats.DecreaseHealth(currentMove.Damage);                   
+                    PlayerTurn = false;
+                    currentMove = null;
                 }
             }
-            PlayerTurn = false;
+            else if (currentState == BattleState.RUN)
+            {
+                //Message + Audio
+                SceneManager.LoadScene("MainScene");
+            }
         }
         else
         {
-            //Random Enemy Attack
+            //Hardcoded Enemy Attack
+            PlayerStats.DecreaseHealth(10);
+            PlayerTurn = true;
         }
 
     }
 
-    public void CheckMoveClicked(Button move)
+    public void CheckMoveClicked(Button btn)
     {
-        if (move = btn_Move1)
+        if (btn = btn_Move1)
             currentMove = LPUNCH;
-        else if (move = btn_Move2)
+        else if (btn = btn_Move2)
             currentMove = HPUNCH;
-        else if (move = btn_Move3)
+        else if (btn = btn_Move3)
             currentMove = LKICK;
-        else if (move = btn_Move4)
+        else if (btn = btn_Move4)
             currentMove = HKICK;
     }
 

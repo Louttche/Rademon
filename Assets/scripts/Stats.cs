@@ -21,7 +21,7 @@ public class Stats : MonoBehaviour {
         HealthBar.fillAmount = 1;
     }
 
-    public void IncreaseHealth(int amount)
+    public void IncreaseHealth(float amount)
     {
         if (CurrentHealth + amount >= MaxHealth)
         {
@@ -35,7 +35,7 @@ public class Stats : MonoBehaviour {
         }
     }
 
-    public void DecreaseHealth(int amount)
+    public void DecreaseHealth(float amount)
     {
         if (CurrentHealth - amount <= 0)
         {
