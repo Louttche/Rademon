@@ -5,49 +5,47 @@ using UnityEngine.UI;
 
 public class Stats : MonoBehaviour {
 
-    public Image HealthBar;
-
-    private float CurrentHealth;
+    public float CurrentHealth { get; set; }
     public float MaxHealth { get; set; }
     public bool IsRadiated { get; set; }
-    public bool IsDead;
-    
-    public Stats(float maxhealth, bool isRadiated)
+    public bool IsDead { get; set; }
+
+    private static GameObject battleController;
+    public static GameObject BattleController
     {
-        this.MaxHealth = maxhealth;
-        this.CurrentHealth = maxhealth;
-        this.IsRadiated = isRadiated;
-        this.IsDead = false;
-        HealthBar.fillAmount = 1;
+        get
+        {
+            if (battleController == null)
+            {
+                battleController = new GameObject("Battle Controller");
+            }
+            return battleController;
+        }
+    }
+
+    public static Stats CreateComponent(float maxhealth, bool isRadiated)
+    {
+        var NewStat = BattleController.AddComponent<Stats>();
+        NewStat.MaxHealth = maxhealth;
+        NewStat.CurrentHealth = maxhealth;
+        NewStat.IsRadiated = isRadiated;
+        NewStat.IsDead = false;
+        return NewStat;
     }
 
     public void IncreaseHealth(float amount)
     {
-        if (CurrentHealth + amount >= MaxHealth)
-        {
-            this.CurrentHealth = MaxHealth;
-            HealthBar.fillAmount = 1; 
-        }
-        else
-        {
-            this.CurrentHealth += amount;
-            HealthBar.fillAmount += amount/100;
-        }
+        this.CurrentHealth += amount;
+        if (this.CurrentHealth > this.MaxHealth)
+            this.CurrentHealth = this.MaxHealth;
     }
 
-    public void DecreaseHealth(float amount)
+    public bool DecreaseHealth(float amount) //returns true if it died from the damage
     {
-        if (CurrentHealth - amount <= 0)
-        {
-            this.CurrentHealth = 0;
-            HealthBar.fillAmount = 0;
-            this.IsDead = true;
-        }
-        else
-        {
-            this.CurrentHealth -= amount;
-            HealthBar.fillAmount -= amount / 100;
-        }
+        this.CurrentHealth -= amount;
+        if (CurrentHealth <= 0)
+            return true;
+        return false;
     }
 
     public void CureRadiation()

@@ -8,124 +8,237 @@ public class TurnBasedBattle : MonoBehaviour {
 
     enum BattleState
     {
-        IDLE,
+        START,
         FIGHT,
         ITEMS,
         WEAPONS,
-        RUN
+        RUN,
     }
 
     private BattleState currentState;
+    private Image PlayerHealthBar;
+    private Image EnemyHealthBar;
+    public Image img_PlayerRadiationStatus;
+    //public Image img_EnemyRadiationStatus; Not needed for demo
     private Moves currentMove;
-    public Button btn_Move1;
-    public Button btn_Move2;
-    public Button btn_Move3;
-    public Button btn_Move4;
-    private bool PlayerTurn;
+    private Button btn_Move1;
+    private Button btn_Move2;
+    private Button btn_Move3;
+    private Button btn_Move4;
+    private Button btn_Fight;
+    private Button btn_Items;
+    private Button btn_Weapons;
+    private Button btn_Run;
+    private bool PlayerTurn = true;
     private Stats PlayerStats;
     private Stats EnemyStats;
     private Moves LPUNCH; //light punch
     private Moves HPUNCH; //heavy punch
     private Moves LKICK; //light kick
     private Moves HKICK; //heavy kick
-    public Button[] ChoicesButtons;
-
-    private void Awake()
-    {
-        InitializeMoves();
-        DisableMoveButtons();
-        DisableChoicesButtons();
-    }
+    private int TutorialEnemyTurn;
+    public DialogueManager dialogueManager;
+    public Dialogue FirstAttackDialogue;
+    public Dialogue RadiationDialogue;
+    public Dialogue WinningDialogue;
 
     // Use this for initialization
     void Start () {
-        PlayerStats = new Stats(100, false);
-        EnemyStats = new Stats(50, false);
-        currentState = BattleState.IDLE;
-        PlayerTurn = true;
+        InitializeStats();
+        InitializeMoves();
+        InitializeMoveButtons();
+        InitializeChoiceButtons();
+        DisableMoveButtons();
+        DisableChoicesButtons();
+        currentState = BattleState.START;
+        TutorialEnemyTurn = 0;
+        img_PlayerRadiationStatus.enabled = false;
     }
 
     private void Update()
     {
-        if ((PlayerStats.IsDead == false) && (EnemyStats.IsDead == false) && (currentState != BattleState.RUN))
+        if ((PlayerStats.IsDead == false) && (EnemyStats.IsDead == false)) //Checks whether the player or enemy is dead
             TurnChecker();
+        else if (PlayerStats.IsDead == true)
+        {
+            Debug.Log("Player died");
+            SceneManager.LoadScene("MainScene");
+        }
+        else if (EnemyStats.IsDead == true)
+        {
+            Debug.Log("Enemy died");
+            dialogueManager.StartDialogue(WinningDialogue);
+            SceneManager.LoadScene("MainScene");
+        }            
+    }
+
+    private float Map(float value, float inMin, float inMax, float outMin, float outMax) //Returns the damage value according to fillamount's range (0 - 1)
+    {
+        return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+    }
+
+    void InitializeMoveButtons()
+    {
+        btn_Move1 = this.transform.Find("Canvas/MainPanel/MovesPanel/Move1").gameObject.GetComponent<Button>();
+        btn_Move2 = this.transform.Find("Canvas/MainPanel/MovesPanel/Move2").gameObject.GetComponent<Button>();
+        btn_Move3 = this.transform.Find("Canvas/MainPanel/MovesPanel/Move3").gameObject.GetComponent<Button>();
+        btn_Move4 = this.transform.Find("Canvas/MainPanel/MovesPanel/Move4").gameObject.GetComponent<Button>();
+    }
+
+    void InitializeChoiceButtons()
+    {
+        btn_Fight = this.transform.Find("Canvas/MainPanel/ChoicesPanel/Fight").gameObject.GetComponent<Button>();
+        btn_Items = this.transform.Find("Canvas/MainPanel/ChoicesPanel/Items").gameObject.GetComponent<Button>();
+        btn_Weapons = this.transform.Find("Canvas/MainPanel/ChoicesPanel/Weapons").gameObject.GetComponent<Button>();
+        btn_Run = this.transform.Find("Canvas/MainPanel/ChoicesPanel/Run").gameObject.GetComponent<Button>();
     }
 
     void DisableChoicesButtons()
     {
-        foreach (Button b in ChoicesButtons)
-        {
-            b.interactable = false;
-        }
-
+        btn_Fight.interactable = false;
+        btn_Items.interactable = false;
+        btn_Weapons.interactable = false;
+        btn_Run.interactable = false;
     }
 
     void EnableChoicesButtons()
     {
-        foreach (Button b in ChoicesButtons)
-        {
-            b.interactable = true;
-        }
+        btn_Fight.interactable = true;
+        btn_Items.interactable = true;
+        btn_Weapons.interactable = true;
+        btn_Run.interactable = true;
+    }
+
+    void InitializeStats()
+    {
+        PlayerStats = Stats.CreateComponent(100, false);
+        EnemyStats = Stats.CreateComponent(50, false);
+        PlayerHealthBar = this.transform.Find("Canvas/BattleScene/Player/StatsLayout/HealthBar Background/HealthBar").gameObject.GetComponent<Image>();      
+        EnemyHealthBar = this.transform.Find("Canvas/BattleScene/Foe/StatsLayout/HealthBar Background/HealthBar").gameObject.GetComponent<Image>();
+        PlayerHealthBar.fillAmount = 1;
+        EnemyHealthBar.fillAmount = 1;
     }
 
     void InitializeMoves()
     {
-        LPUNCH = new Moves(10, 5);
-        HPUNCH = new Moves(20, 2);
-        LKICK = new Moves(15, 5);
-        HKICK = new Moves(25, 2);
+        LPUNCH = Moves.CreateComponent("Light Punch", 10, 5);
+        HPUNCH = Moves.CreateComponent("Heavy Punch", 20, 2);
+        LKICK = Moves.CreateComponent("Light Kick", 15, 3);
+        HKICK = Moves.CreateComponent("Heavy Kick", 25, 1);
     }
 
-    void TurnChecker()
+    private void TurnChecker()
     {
+        Debug.LogFormat("Player's health is {0}", PlayerStats.CurrentHealth);
+        Debug.LogFormat("Enemy's health is {0}", EnemyStats.CurrentHealth);
+
         if (PlayerTurn == true)
         {
-            EnableChoicesButtons();
-            if (currentState == BattleState.ITEMS)
+            Debug.Log("Player's turn");
+            EnableChoicesButtons();            
+            switch (currentState)
             {
-                //Open Item inventory
-                Debug.Log("Items not yet implemented");
-            }
-            else if (currentState == BattleState.WEAPONS)
-            {
-                //Check Available Weapons
-                Debug.Log("Weapons not yet implemented");
-            }
-            else if (currentState == BattleState.FIGHT)                     //WORK ON THIS NEXT
-            {
-                //Change Enemy Stats
-                if (currentMove != null)
-                {
-                    EnemyStats.DecreaseHealth(currentMove.Damage);                   
-                    PlayerTurn = false;
+                case BattleState.START:
+                    break;
+
+                case BattleState.FIGHT:
+                    EnemyStats.IsDead = EnemyStats.DecreaseHealth(currentMove.Damage);
+                    if (EnemyStats.IsDead == false) //Set health bar to 0 if dead
+                        EnemyHealthBar.fillAmount -= Map(currentMove.Damage, 0, 50, 0, 1);
+                    else
+                        EnemyHealthBar.fillAmount = 0;
+                    bool TookRadiationDmg = TakeRadiationDamage(PlayerStats);
+                    if (TookRadiationDmg == true)
+                    {                       
+                        PlayerHealthBar.fillAmount -= 0.05f;
+                        Debug.LogFormat("You took radiation damage, your health is now {0}", PlayerStats.CurrentHealth);
+                    }
+                    DisableMoveButtons();
                     currentMove = null;
-                }
-            }
-            else if (currentState == BattleState.RUN)
-            {
-                //Message + Audio
-                SceneManager.LoadScene("MainScene");
+                    PlayerTurn = false;
+                    currentState = BattleState.START;
+                    break;
+
+                case BattleState.ITEMS:
+                    //Open Item inventory
+                    DisableMoveButtons();
+                    Debug.Log("Items not yet implemented");
+                    currentState = BattleState.START;
+                    break;
+
+                case BattleState.RUN:
+                    Debug.Log("Escaped Rademon");
+                    SceneManager.LoadScene("MainScene");
+                    break;
+
+                case BattleState.WEAPONS:
+                    //Check Available Weapons
+                    DisableMoveButtons();
+                    Debug.Log("Weapons not yet implemented");
+                    currentState = BattleState.START;
+                    break;
             }
         }
-        else
-        {
-            //Hardcoded Enemy Attack
-            PlayerStats.DecreaseHealth(10);
+        else //Enemy's turn
+        {            
+            Debug.Log("Enemy's turn");
+            DisableChoicesButtons();
+            TutorialEnemyTurn++;
+            if (TutorialEnemyTurn == 1) //On the first turn just deal some damage to the player and have Vaultboi explain what happened
+            {
+                PlayerStats.IsDead = PlayerStats.DecreaseHealth(20);
+                PlayerHealthBar.fillAmount -= 0.2f; //No need to check if player is dead in the first turn
+                Debug.Log("Enemy attacked you!");
+                dialogueManager.StartDialogue(FirstAttackDialogue);
+            }           
+            else if (TutorialEnemyTurn == 2) //On the second turn have the player take radiation
+            {
+                PlayerStats.IsDead = PlayerStats.DecreaseHealth(5);
+                PlayerHealthBar.fillAmount = PlayerHealthBar.fillAmount - 0.05f;
+                PlayerStats.IsRadiated = true;
+                img_PlayerRadiationStatus.enabled = true;
+                Debug.Log("You became radiated!");
+                dialogueManager.StartDialogue(RadiationDialogue);
+            }
+            else //next turns just keep damaging the player lightly
+            {
+                PlayerStats.IsDead = PlayerStats.DecreaseHealth(10);
+                if (PlayerStats.IsDead == false) //Set health bar to 0 if dead
+                    PlayerHealthBar.fillAmount -= 0.1f;
+                else
+                    PlayerHealthBar.fillAmount = 0;
+                Debug.Log("Enemy attacked you!");
+            }
             PlayerTurn = true;
         }
+    }
 
+    bool TakeRadiationDamage(Stats who) //return true if taken damage by radiation
+    {
+        if (who.IsRadiated == true)
+        {
+            who.DecreaseHealth(5);
+            return true;
+        }
+        return false;
     }
 
     public void CheckMoveClicked(Button btn)
-    {
-        if (btn = btn_Move1)
+    {                      
+        if (btn == btn_Move1)
             currentMove = LPUNCH;
-        else if (btn = btn_Move2)
+        else if (btn == btn_Move2)
             currentMove = HPUNCH;
-        else if (btn = btn_Move3)
+        else if (btn == btn_Move3)
             currentMove = LKICK;
-        else if (btn = btn_Move4)
-            currentMove = HKICK;
+        else if (btn == btn_Move4)
+            currentMove = HKICK;        
+        bool EnoughPP = currentMove.DecreasePP();
+        if (EnoughPP == true)
+        {
+            Debug.LogFormat("Used Move: {0} with damage of {1} and PP of {2}", currentMove.Name, currentMove.Damage, currentMove.CurrentPP);
+            currentState = BattleState.FIGHT;
+        }           
     }
 
     void DisableMoveButtons()
@@ -136,7 +249,7 @@ public class TurnBasedBattle : MonoBehaviour {
         btn_Move4.interactable = false;
     }
     
-    void EnableMoveButtons()
+    public void EnableMoveButtons()
     {
         btn_Move1.interactable = true;
         btn_Move2.interactable = true;
@@ -144,27 +257,21 @@ public class TurnBasedBattle : MonoBehaviour {
         btn_Move4.interactable = true;
     }
 
-    public void EnterFightMode()
-    {
-        currentState = BattleState.FIGHT;
-        EnableMoveButtons();
-    }
-
     public void EnterItemsMode()
     {
-        DisableMoveButtons();
+        Debug.Log("Entered Items Mode.");
         currentState = BattleState.ITEMS;
     }
 
     public void EnterWeaponsMode()
     {
-        DisableMoveButtons();
+        Debug.Log("Entered Weapons Mode.");
         currentState = BattleState.WEAPONS;
     }
 
     public void EnterRunMode()
     {
-        DisableMoveButtons();
+        Debug.Log("Entered Run Mode.");
         currentState = BattleState.RUN;
     }
 }
