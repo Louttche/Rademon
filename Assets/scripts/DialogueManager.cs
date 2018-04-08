@@ -8,23 +8,25 @@ public class DialogueManager : MonoBehaviour {
     public Text dialogueText;
     public Animator animator;
     private Queue<string> sentences;
+    public bool EndofDialogue;
 
 	// Use this for initialization
 	void Start () {
         sentences = new Queue<string>();
-	}
+    }
 
     public void StartDialogue(Dialogue dialogue)
     {
+        EndofDialogue = false;
         animator.SetBool("IsOpen", true);
-
         sentences.Clear();
 
         foreach (string sentence in dialogue.sentences)
         {
             sentences.Enqueue(sentence);
+            Debug.Log("Added sentences to queue");
         }
-
+       
         DisplayNextSentence();
     }
 
@@ -33,6 +35,7 @@ public class DialogueManager : MonoBehaviour {
         if (sentences.Count == 0)
         {
             EndDialogue();
+            EndofDialogue = true;
             return;
         }
 

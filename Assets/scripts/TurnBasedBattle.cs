@@ -38,9 +38,12 @@ public class TurnBasedBattle : MonoBehaviour {
     private Moves HKICK; //heavy kick
     private int TutorialEnemyTurn;
     public DialogueManager dialogueManager;
+    public Dialogue BattleStartDialogue;
     public Dialogue FirstAttackDialogue;
     public Dialogue RadiationDialogue;
     public Dialogue WinningDialogue;
+    public Dialogue LosingDialogue;
+    private bool EndofBattle;
 
     // Use this for initialization
     void Start () {
@@ -53,23 +56,38 @@ public class TurnBasedBattle : MonoBehaviour {
         currentState = BattleState.START;
         TutorialEnemyTurn = 0;
         img_PlayerRadiationStatus.enabled = false;
+        EndofBattle = false;
+        //dialogueManager.EndofDialogue = true; //Not needed as BattleStartDialogue will set it as true when it's done
+        dialogueManager.StartDialogue(BattleStartDialogue);
     }
 
     private void Update()
     {
-        if ((PlayerStats.IsDead == false) && (EnemyStats.IsDead == false)) //Checks whether the player or enemy is dead
-            TurnChecker();
-        else if (PlayerStats.IsDead == true)
+        if (EndofBattle == false)
         {
-            Debug.Log("Player died");
-            SceneManager.LoadScene("MainScene");
+            if ((PlayerStats.IsDead == false) && (EnemyStats.IsDead == false) && (dialogueManager.EndofDialogue == true)) //Checks whether the player or enemy is dead and go to the player's turn only if all dialogues are done
+                TurnChecker();
+            else if (PlayerStats.IsDead == true)
+            {
+                Debug.Log("Player died");
+                dialogueManager.StartDialogue(LosingDialogue);
+                EndofBattle = true;
+            }
+            else if (EnemyStats.IsDead == true)
+            {
+                Debug.Log("Enemy died");
+                dialogueManager.StartDialogue(WinningDialogue);
+                EndofBattle = true;
+            }
         }
-        else if (EnemyStats.IsDead == true)
+        else
         {
-            Debug.Log("Enemy died");
-            dialogueManager.StartDialogue(WinningDialogue);
-            SceneManager.LoadScene("MainScene");
-        }            
+            if (dialogueManager.EndofDialogue == true)
+            {
+                Debug.Log("Battle ended.");
+                Application.Quit();
+            }
+        }
     }
 
     private float Map(float value, float inMin, float inMax, float outMin, float outMax) //Returns the damage value according to fillamount's range (0 - 1)

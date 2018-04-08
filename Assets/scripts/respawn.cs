@@ -6,9 +6,11 @@ public class respawn : MonoBehaviour {
 
     private Vector3 startPos;
     private Quaternion startRot;
-    
-	// Use this for initialization
-	void Start () {
+    public Dialogue respawnDialogue;
+    public DialogueManager dialoguemanager;
+
+    // Use this for initialization
+    void Start () {
         startPos = transform.position;
         startRot = transform.rotation;
 	}
@@ -18,11 +20,13 @@ public class respawn : MonoBehaviour {
     {
         if (col.tag == "Death")
         {
+            //this.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>().enabled = false; //Commented out cuz of bug
             transform.position = startPos;
             transform.rotation = startRot;
             GetComponent<Animator>().Play("LOSE00", -1, 0f);
             GetComponent<Rigidbody>().velocity = new Vector3(0f, 0f, 0f);
-            GetComponent<Rigidbody>().angularVelocity = new Vector3(0f, 0f, 0f);
+            GetComponent<Rigidbody>().angularVelocity = new Vector3(0f, 0f, 0f);           
+            dialoguemanager.StartDialogue(respawnDialogue);            
         }
     }
 }
