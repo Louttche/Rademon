@@ -10,6 +10,9 @@ public class Stats : MonoBehaviour {
     public bool IsRadiated { get; set; }
     public bool IsDead { get; set; }
 
+    //public AudioSource Hit_sound;
+    //public AudioSource Radiation_sound;
+
     private static GameObject battleController;
     public static GameObject BattleController
     {
@@ -42,6 +45,8 @@ public class Stats : MonoBehaviour {
 
     public bool DecreaseHealth(float amount) //returns true if it died from the damage
     {
+        //Hit_sound = this.transform.Find("Hit").GetComponent<AudioSource>();
+        //Hit_sound.Play();
         this.CurrentHealth -= amount;
         if (CurrentHealth <= 0)
             return true;
@@ -55,6 +60,8 @@ public class Stats : MonoBehaviour {
 
     public void GetRadiation()
     {
+        //Radiation_sound = this.transform.Find("Radiation").GetComponent<AudioSource>();
+        //Radiation_sound.Play();
         this.IsRadiated = true;
     }
 }

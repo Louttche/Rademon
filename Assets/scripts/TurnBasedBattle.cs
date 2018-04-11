@@ -38,12 +38,13 @@ public class TurnBasedBattle : MonoBehaviour {
     private Moves HKICK; //heavy kick
     private int TutorialEnemyTurn;
     public DialogueManager dialogueManager;
+    public AudioManager audioManager;
     public Dialogue BattleStartDialogue;
     public Dialogue FirstAttackDialogue;
     public Dialogue RadiationDialogue;
     public Dialogue WinningDialogue;
     public Dialogue LosingDialogue;
-    private bool EndofBattle;
+    private bool EndofBattle;    
 
     // Use this for initialization
     void Start () {
@@ -76,6 +77,8 @@ public class TurnBasedBattle : MonoBehaviour {
             else if (EnemyStats.IsDead == true)
             {
                 Debug.Log("Enemy died");
+                audioManager.VictorySound.Play();
+                audioManager.BackgroundMusic.Stop();
                 dialogueManager.StartDialogue(WinningDialogue);
                 EndofBattle = true;
             }
@@ -145,6 +148,11 @@ public class TurnBasedBattle : MonoBehaviour {
         HKICK = Moves.CreateComponent("Heavy Kick", 25, 1);
     }
 
+    IEnumerator WaitFor(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+    }
+
     private void TurnChecker()
     {
         Debug.LogFormat("Player's health is {0}", PlayerStats.CurrentHealth);
@@ -160,6 +168,8 @@ public class TurnBasedBattle : MonoBehaviour {
                     break;
 
                 case BattleState.FIGHT:
+                    audioManager.HitSound.Play();
+                    //StartCoroutine(WaitFor(audioManager.HitSound.GetComponent<AudioSource>().clip.length));
                     EnemyStats.IsDead = EnemyStats.DecreaseHealth(currentMove.Damage);
                     if (EnemyStats.IsDead == false) //Set health bar to 0 if dead
                         EnemyHealthBar.fillAmount -= Map(currentMove.Damage, 0, 50, 0, 1);
@@ -198,8 +208,8 @@ public class TurnBasedBattle : MonoBehaviour {
             }
         }
         else //Enemy's turn
-        {            
-            Debug.Log("Enemy's turn");
+        {
+            Debug.Log("Enemy's turn");      
             DisableChoicesButtons();
             TutorialEnemyTurn++;
             if (TutorialEnemyTurn == 1) //On the first turn just deal some damage to the player and have Vaultboi explain what happened
@@ -211,6 +221,7 @@ public class TurnBasedBattle : MonoBehaviour {
             }           
             else if (TutorialEnemyTurn == 2) //On the second turn have the player take radiation
             {
+                audioManager.RadiationSound.Play();
                 PlayerStats.IsDead = PlayerStats.DecreaseHealth(5);
                 PlayerHealthBar.fillAmount = PlayerHealthBar.fillAmount - 0.05f;
                 PlayerStats.IsRadiated = true;

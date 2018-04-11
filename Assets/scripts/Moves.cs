@@ -8,6 +8,7 @@ public class Moves : MonoBehaviour {
     public float Damage { get; set; }
     public int MaxPP { get; set; }
     public int CurrentPP;
+    //public AudioSource SoundEffect { get; set;}
 
     private static GameObject battleController;
     public static GameObject BattleController
@@ -22,13 +23,14 @@ public class Moves : MonoBehaviour {
         }
     }
 
-    public static Moves CreateComponent(string name, float damage, int pp)
+    public static Moves CreateComponent(string name, float damage, int pp/*, soundEffect*/)
     {
         var NewMove = BattleController.AddComponent<Moves>();
         NewMove.Name = name;
         NewMove.Damage = damage;
         NewMove.MaxPP = pp;
         NewMove.CurrentPP = NewMove.MaxPP;
+        //NewMove.SoundEffect = soundEffect;
         return NewMove;
     }
 

@@ -5,22 +5,21 @@ using UnityEngine.SceneManagement;
 
 public class SwitchScenes : MonoBehaviour {
 
-    //float fadeTime;
+    private string BattleSceneName = "BattleScene";
+    private Color loadToColor = Color.black;
 
     private void OnTriggerEnter(Collider col)
     {
         if (col.tag == "Battle")
         {
             Debug.Log("Entered Battle");
-            //fadeTime = GameObject.Find("GameManager").GetComponent<Fading>().BeginFade(1);
-            //StopAllCoroutines();
-            //StartCoroutine(WaitTime());
-            SceneManager.LoadScene("BattleScene");
+            //SceneManager.LoadScene(BattleSceneName);            
+            Initiate.Fade(BattleSceneName, loadToColor, 2.0f);
         }
     }
 
-    /*IEnumerator WaitTime()
+    /*IEnumerator WaitForAudio()
     {
-        yield return new WaitForSeconds(fadeTime);
+        yield return new WaitForSeconds(EnterBattleAudio.GetComponent<AudioClip>().length);
     }*/
 }
