@@ -1,1 +1,1 @@
-MyProject_2
+Parody game mixing Fallout + Pokemon
